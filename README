@@ -1,15 +1,23 @@
-** THIS IS A PRE-RELEASE! **
+
+BeebEm is a BBC Micro and Master 128 emulator.  It enables you to run BBC
+Micro software on your PC.  BeebEm should work on most PC systems running
+Windows 98 or later.
+
+BeebEm is distributed with everything you need to get going, just run BeebEm
+from the Start menu (or run BeebEm.exe if you unzipped it).  If BeebEm does
+not run see the troubleshooting section below.
+
+BeebEm is distributed with source code in the Src.zip file so you can
+compile and modify BeebEm yourself.
+
+The copyright on everything in BeebEm resides with David Gilbert, the
+original author, as described in COPYRIGHT.txt.
 
 To install:
 
 ---
 
 Install in home account (for a specific user only):
-
-
-# Extract the source code tarball:
-tar zxvf beebem-0.0.8.tar.gz
-cd beebem-0.0.8
 
 ./configure --prefix=$HOME/test --enable-econet
 make
@@ -18,10 +26,6 @@ make install
 ---
 
 Install as root (global install for all users):
-
-
-tar zxvf beebem-0.0.8.tar.gz
-cd beebem-0.0.8
 
 ./configure --enable-econet
 make
