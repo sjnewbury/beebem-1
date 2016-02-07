@@ -1,7 +1,6 @@
 
 BeebEm is a BBC Micro and Master 128 emulator.  It enables you to run BBC
-Micro software on your PC.  BeebEm should work on most PC systems running
-Windows 98 or later.
+Micro software on your PC.
 
 This version of BeebEm is distributed as source code so you can compile and
 modify BeebEm yourself.
