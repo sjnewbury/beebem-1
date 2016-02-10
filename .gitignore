@@ -1,0 +1,17 @@
+*.a
+*.in
+*.o
+*~
+.*.swp
+.deps
+/aclocal.m4
+/compile
+/configure
+Makefile
+Session.vim
+autom4te.cache
+config.h
+config.log
+config.status
+src/beebem
+stamp-h1
