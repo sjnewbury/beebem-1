@@ -102,10 +102,11 @@ bool cRegistry::GetBinaryValue(HKEY hKeyRoot, LPSTR lpSubKey, LPSTR lpValue, PVO
 		for (i=0; i< (unsigned int) (*pnSize); i++)
 			callers_buffer_ptr[i] = 0;
 
-		for (i=0; i< strlen(fake_registry_ptr)/2; i++){
+		for (i=0; i< (*pnSize) / 2; i++){
 
 			sscanf(fake_registry_ptr, "%02X", &val);
 
+			fake_registry_ptr += 2;
 			*callers_buffer_ptr++ = (unsigned char) val;
 		}
 	}
