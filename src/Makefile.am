@@ -3,7 +3,7 @@
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
 
-SUBDIRS = posix gui
+SUBDIRS = posix gui test
 
 #INCLUDE = -I@top_srcdir@/src/gui
 

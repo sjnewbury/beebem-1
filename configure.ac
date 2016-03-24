@@ -204,6 +204,6 @@ echo "--------------------------------------------------------------------"
 AC_SUBST(CFLAGS)
 AC_SUBST(LIBS)
 
-AC_OUTPUT(Makefile doc/Makefile m4/Makefile src/Makefile src/gui/Makefile src/posix/Makefile data/Makefile)
+AC_OUTPUT(Makefile doc/Makefile m4/Makefile src/Makefile src/gui/Makefile src/posix/Makefile src/test/Makefile src/test/cregtest/Makefile data/Makefile)
 
 #echo ""; echo "(end)"
