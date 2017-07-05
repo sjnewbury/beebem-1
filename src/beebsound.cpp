@@ -106,6 +106,7 @@ volatile struct BeebState {
     unsigned int Vol:4;
   } Noise;
   int LastToneFreqSet; /* the tone generator last set - for writing the 2nd byte */
+  int LastRegister;
 } BeebState76489;
 
 
@@ -736,6 +737,7 @@ void Sound_Trigger(int NCycles) {
 
 void SoundChipReset(void) {
   BeebState76489.LastToneFreqSet=0;
+  BeebState76489.LastRegister=0;
   BeebState76489.ToneVolume[0]=0;
   BeebState76489.ToneVolume[1]=BeebState76489.ToneVolume[2]=BeebState76489.ToneVolume[3]=GetVol(15);
   BeebState76489.ToneFreq[0]=BeebState76489.ToneFreq[1]=BeebState76489.ToneFreq[2]=1000;
@@ -826,89 +828,104 @@ void Sound_RegWrite(int value) {
     return;
   VolChange=4;
 
+
+  unsigned reg;
+  unsigned mask;
+  unsigned val;
+
   if (!(value & 0x80)) {
-    unsigned val=BeebState76489.ToneFreq[BeebState76489.LastToneFreqSet] & 15;
-
-    /* Its changing the top half of the frequency */
-    val |= (value & 0x3f)<<4;
-
-    /* And update */
-    BeebState76489.ToneFreq[BeebState76489.LastToneFreqSet]=val;
-    SetFreq(BeebState76489.LastToneFreqSet+1,BeebState76489.ToneFreq[BeebState76489.LastToneFreqSet]);
-    trigger = 1;
+    /* DATA */
+    reg = BeebState76489.LastRegister;
+    if (!(reg & 1)) {
+      /* Tone/noise */
+      mask = 0x000f;
+      val = (value & 0x3f) << 4;
+    } else {
+      /* Volume */
+      mask = 0;  /* ignored */
+      val = value & 0x0f;
+    }
   } else {
+    /* LATCH/DATA */
+    reg = (value >> 4) & 0x07;
+    mask = 0x03f0;  /* ignored for volume */
+    val = value & 0x0f;
+    BeebState76489.LastRegister = reg;
+  }
+
+
     /* Another register */
 	VolChange=0xff;
-    switch ((value>>4) & 0x7) {
+    switch (reg) {
       case 0: /* Tone 3 freq */
-        BeebState76489.ToneFreq[2]=(BeebState76489.ToneFreq[2] & 0x2f0) | (value & 0xf);
+        BeebState76489.ToneFreq[2]=(BeebState76489.ToneFreq[2] & mask) | val;
         SetFreq(3,BeebState76489.ToneFreq[2]);
         BeebState76489.LastToneFreqSet=2;
 	//	trigger = 1;
         break;
 
       case 1: /* Tone 3 vol */
-        RealVolumes[3]=value&15;
-		if ((BeebState76489.ToneVolume[3]==0) && ((value &15)!=15)) ActiveChannel[3]=TRUE;
-        if ((BeebState76489.ToneVolume[3]!=0) && ((value &15)==15)) ActiveChannel[3]=FALSE;
-        BeebState76489.ToneVolume[3]=GetVol(15-(value & 15));
+        RealVolumes[3]=val;
+		if ((BeebState76489.ToneVolume[3]==0) && (val!=15)) ActiveChannel[3]=TRUE;
+        if ((BeebState76489.ToneVolume[3]!=0) && (val==15)) ActiveChannel[3]=FALSE;
+        BeebState76489.ToneVolume[3]=GetVol(15-val);
         BeebState76489.LastToneFreqSet=2;
 		trigger = 1;
 		VolChange=3;
         break;
 
       case 2: /* Tone 2 freq */
-        BeebState76489.ToneFreq[1]=(BeebState76489.ToneFreq[1] & 0x2f0) | (value & 0xf);
+        BeebState76489.ToneFreq[1]=(BeebState76489.ToneFreq[1] & mask) | val;
         BeebState76489.LastToneFreqSet=1;
         SetFreq(2,BeebState76489.ToneFreq[1]);
 	//	trigger = 1;
         break;
 
       case 3: /* Tone 2 vol */
-        RealVolumes[2]=value&15;
-        if ((BeebState76489.ToneVolume[2]==0) && ((value &15)!=15)) ActiveChannel[2]=TRUE;
-        if ((BeebState76489.ToneVolume[2]!=0) && ((value &15)==15)) ActiveChannel[2]=FALSE;
-        BeebState76489.ToneVolume[2]=GetVol(15-(value & 15));
+        RealVolumes[2]=val;
+        if ((BeebState76489.ToneVolume[2]==0) && (val!=15)) ActiveChannel[2]=TRUE;
+        if ((BeebState76489.ToneVolume[2]!=0) && (val==15)) ActiveChannel[2]=FALSE;
+        BeebState76489.ToneVolume[2]=GetVol(15-val);
         BeebState76489.LastToneFreqSet=1;
 		trigger = 1;
 		VolChange=2;
         break;
 
       case 4: /* Tone 1 freq (Possibly also noise!) */
-        BeebState76489.ToneFreq[0]=(BeebState76489.ToneFreq[0] & 0x2f0) | (value & 0xf);
+        BeebState76489.ToneFreq[0]=(BeebState76489.ToneFreq[0] & mask) | val;
         BeebState76489.LastToneFreqSet=0;
         SetFreq(1,BeebState76489.ToneFreq[0]);
 	//	trigger = 1;
         break;
 
       case 5: /* Tone 1 vol */
-        RealVolumes[1]=value&15;
-        if ((BeebState76489.ToneVolume[1]==0) && ((value &15)!=15)) ActiveChannel[1]=TRUE;
-        if ((BeebState76489.ToneVolume[1]!=0) && ((value &15)==15)) ActiveChannel[1]=FALSE;
-        BeebState76489.ToneVolume[1]=GetVol(15-(value & 15));
+        RealVolumes[1]=val;
+        if ((BeebState76489.ToneVolume[1]==0) && (val!=15)) ActiveChannel[1]=TRUE;
+        if ((BeebState76489.ToneVolume[1]!=0) && (val==15)) ActiveChannel[1]=FALSE;
+        BeebState76489.ToneVolume[1]=GetVol(15-val);
         BeebState76489.LastToneFreqSet=0;
 		trigger = 1;
 		VolChange=1;
         break;
 
       case 6: /* Noise control */
-        BeebState76489.Noise.Freq=value &3;
-        BeebState76489.Noise.FB=(value>>2)&1;
+        BeebState76489.Noise.Freq=val & 3;
+        BeebState76489.Noise.FB=(val>>2)&1;
 
         trigger = 1;
         break;
 
       case 7: /* Noise volume */
-        if ((BeebState76489.ToneVolume[0]==0) && ((value &15)!=15)) ActiveChannel[0]=TRUE;
-        if ((BeebState76489.ToneVolume[0]!=0) && ((value &15)==15)) ActiveChannel[0]=FALSE;
+        if ((BeebState76489.ToneVolume[0]==0) && (val!=15)) ActiveChannel[0]=TRUE;
+        if ((BeebState76489.ToneVolume[0]!=0) && (val==15)) ActiveChannel[0]=FALSE;
 		RealVolumes[0]=value&15;
-        BeebState76489.ToneVolume[0]=GetVol(15-(value & 15));
+        BeebState76489.ToneVolume[0]=GetVol(15-val);
         trigger = 1;
 		VolChange=0;
         break;
-    };
+    }
    //if (VolChange<4) fprintf(sndlog,"Channel %d - Volume %d at %lu Cycles\n",VolChange,value &15,SoundCycles);
-  };
+
   if /*(*/(trigger)/* && (!ReloadingChip))*/ 
     SoundTrigger_Real();
 }; /* Sound_RegWrite */
