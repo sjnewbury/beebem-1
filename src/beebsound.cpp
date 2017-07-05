@@ -386,18 +386,18 @@ void PlayUpTil(double DestTime) {
 							break;
 
 						case 3: /* Tone gen 1 */
-							if (GenState[0]) {
-								if (GenIndex[0]>=((BeebState76489.ChangeSamps[1]+(int)CSC[1])*31)) {
-									GenIndex[0]=0;
-									GenState[0]=0;
-								}
-							} else {
-								if (GenIndex[0]>=((BeebState76489.ChangeSamps[1]+(int)CSC[1]))) {
-									GenIndex[0]=0;
-									GenState[0]=1;
+							tt=(int)CSC[0];
+							if (GenIndex[0]>=(BeebState76489.ChangeSamps[1]+tt)) {
+								static int per=0;
+								CSC[0]+=CSA[1]-tt;
+								GenIndex[0]=0;
+								GenState[0]=(per==0);
+								if (++per==30) {
+									per=0;
 								}
 							}
 							break;
+
 						} /* Freq type switch */
 					}
 				}
@@ -683,27 +683,19 @@ static void SetFreq(int Channel, int freqval) {
   int ChangeSamps; /* Number of samples after which to change */
   //fprintf(sndlog,"Channel %d - Value %d\n",Channel,freqval);
   double t;
+
   if (freqval==0) freqval=1;
   if (freqval<5) Speech[Channel]=1; else Speech[Channel]=0;
-/*  if (freqval==0) {
-    ChangeSamps=INT_MAX;
-  } else { */
-    freq=4000000/(32*freqval);
-/*    if (freq>samplerate) {
-      ChangeSamps=INT_MAX; // Way to high frequency - shut off 
-    } else {
-      if (freq>(samplerate/2)) {
-        // Hmm - a bit high - make it top out - change on every sample 
-        // What we should be doing is moving to sine wave at 1/6 samplerate 
-        ChangeSamps=2;
-      } else { */
-        ChangeSamps=(int)( (( (double)samplerate/(double)freq)/2.0) +SoundTuning);
-		t=( (( (double)samplerate/(double)freq)/2.0) +SoundTuning);
-		CSA[Channel]=(double)(t-ChangeSamps);
-		CSC[Channel]=0;
-      /* };
-    }; // freq<=samplerate 
-  }; / * Freqval!=0 */ 
+  freq=4000000/(32*freqval);
+
+  t=( (( (double)samplerate/(double)freq)/2.0) +SoundTuning);
+  ChangeSamps=(int)t;
+  CSA[Channel]=(double)(t-ChangeSamps);
+  CSC[Channel]=CSA[Channel];  // we look ahead, so should already include the fraction on the first update
+  if (Channel==1) {
+    CSC[0]=CSC[1];
+  }
+
   BeebState76489.ChangeSamps[Channel]=ChangeSamps;
 };
 
