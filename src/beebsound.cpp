@@ -944,8 +944,8 @@ void ClickRelay(unsigned char RState) {
 
 int GetVol(int vol) {
 	if (SoundExponentialVolume)	{
-//		static int expVol[] = { 0,  2,  4,  6,  9, 12, 15, 19, 24, 30, 38, 48, 60, 76,  95, 120 };
-		static int expVol[] = { 0, 11, 14, 17, 20, 24, 28, 33, 39, 46, 54, 63, 74, 87, 102, 120 };
+		static int expVol[] = { 0,  5,  6,  8, 10, 12, 15, 19, 24, 30, 38, 48, 60, 76,  95, 120 };
+		//static int expVol[] = { 0, 11, 14, 17, 20, 24, 28, 33, 39, 46, 54, 63, 74, 87, 102, 120 };
 		if (vol >= 0 && vol <= 15)
 			return expVol[vol];
 		else
